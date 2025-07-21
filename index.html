@@ -319,8 +319,8 @@
                 this.currentShape = 0;
                 this.isMorphing = false;
                 this.autoSwitch = true;
-                this.switchInterval = 1000; // 5 seconds
-                this.lastSwitchTime = 0;
+                this.switchInterval = 3000; // 3 seconds
+                this.lastSwitchTime = Date.now();
 
                 // Groups
                 this.constellationGroup = new THREE.Group();
@@ -877,9 +877,11 @@
             }
 
             checkAutoSwitch() {
-                if (this.autoSwitch && this.animationOffset * 10 - this.lastSwitchTime > this.switchInterval) {
+                const currentTime = Date.now();
+                if (this.autoSwitch && currentTime - this.lastSwitchTime > this.switchInterval) {
+                    console.log('Auto switching...');
                     this.smoothSwitch();
-                    this.lastSwitchTime = this.animationOffset * 10;
+                    this.lastSwitchTime = currentTime;
                 }
             }
 
@@ -898,9 +900,9 @@
 
             fadeOutConstellation(callback) {
                 const fadeDuration = 1000; // 1 second fade
-                const startTime = this.animationOffset * 10;
+                const startTime = Date.now();
                 const fadeOut = () => {
-                    const elapsed = (this.animationOffset * 10 - startTime) * 1000;
+                    const elapsed = Date.now() - startTime;
                     const progress = Math.min(elapsed / fadeDuration, 1);
                     const opacity = 1 - progress;
 
@@ -915,6 +917,7 @@
                     this.constellationStars.forEach(star => {
                         if (star.material) {
                             star.material.opacity = opacity;
+                            star.material.transparent = true;
                         }
                     });
 
@@ -929,9 +932,9 @@
 
             fadeInConstellation() {
                 const fadeDuration = 1000; // 1 second fade
-                const startTime = this.animationOffset * 10;
+                const startTime = Date.now();
                 const fadeIn = () => {
-                    const elapsed = (this.animationOffset * 10 - startTime) * 1000;
+                    const elapsed = Date.now() - startTime;
                     const progress = Math.min(elapsed / fadeDuration, 1);
                     const opacity = progress;
 
@@ -946,6 +949,7 @@
                     this.constellationStars.forEach(star => {
                         if (star.material) {
                             star.material.opacity = opacity;
+                            star.material.transparent = true;
                         }
                     });
 

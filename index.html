@@ -227,6 +227,12 @@
                 <div class="value" id="bloomThresholdValue">0.3</div>
             </div>
 
+            <div class="control-group">
+                <label for="backgroundOpacity">Background Stars</label>
+                <input type="range" id="backgroundOpacity" class="slider" min="0" max="1" value="1" step="0.1">
+                <div class="value" id="backgroundOpacityValue">1</div>
+            </div>
+
 
 
             <div class="control-group">
@@ -293,6 +299,7 @@
                 this.bloomIntensity = 1;
                 this.bloomRadius = 0.5;
                 this.bloomThreshold = 0.3;
+                this.backgroundOpacity = 1;
 
                 // Animation
                 this.animationOffset = 0;
@@ -310,8 +317,10 @@
 
                 // Groups
                 this.constellationGroup = new THREE.Group();
+                this.constellationGroup2 = new THREE.Group();
                 this.backgroundGroup = new THREE.Group();
                 this.scene.add(this.constellationGroup);
+                this.scene.add(this.constellationGroup2);
                 this.scene.add(this.backgroundGroup);
 
                 // Post-processing setup
@@ -411,7 +420,7 @@
             }
 
             setupControls() {
-                const controls = ['constellationSize', 'animationSpeed', 'pathDensity', 'outlineOpacity', 'lineThickness', 'bloomIntensity', 'bloomRadius', 'bloomThreshold'];
+                const controls = ['constellationSize', 'animationSpeed', 'pathDensity', 'outlineOpacity', 'lineThickness', 'bloomIntensity', 'bloomRadius', 'bloomThreshold', 'backgroundOpacity'];
                 
                 controls.forEach(controlName => {
                     const element = document.getElementById(controlName);
@@ -433,6 +442,8 @@
                                 this.extractPointsFromPaths(); // Recreate with new thickness
                             } else if (controlName === 'bloomIntensity' || controlName === 'bloomRadius' || controlName === 'bloomThreshold') {
                                 this.updateBloomSettings();
+                            } else if (controlName === 'backgroundOpacity') {
+                                this.updateBackgroundOpacity();
                             }
                         });
                         
@@ -458,7 +469,104 @@
             }
 
             createBackgroundStarfield() {
-                // Background stars removed - keeping empty method for compatibility
+                const starCount = 1500;
+                const geometry = new THREE.BufferGeometry();
+                const positions = new Float32Array(starCount * 3);
+                const sizes = new Float32Array(starCount);
+                const colors = new Float32Array(starCount * 3);
+
+                for (let i = 0; i < starCount * 3; i += 3) {
+                    // Create stars in a sphere around the viewer - much closer and more visible
+                    const radius = 150 + Math.random() * 300;
+                    const theta = Math.random() * Math.PI * 2;
+                    const phi = Math.acos(2 * Math.random() - 1);
+
+                    positions[i] = radius * Math.sin(phi) * Math.cos(theta);
+                    positions[i + 1] = radius * Math.sin(phi) * Math.sin(theta);
+                    positions[i + 2] = radius * Math.cos(phi);
+
+                    sizes[i / 3] = 2.0 + Math.random() * 6.0; // Much larger stars
+
+                    // Brighter star colors
+                    const colorChoice = Math.random();
+                    if (colorChoice < 0.6) {
+                        // Bright white stars (60%)
+                        colors[i] = 1.0;
+                        colors[i + 1] = 1.0;
+                        colors[i + 2] = 1.0;
+                    } else if (colorChoice < 0.8) {
+                        // Bright blue stars (20%)
+                        colors[i] = 0.8;
+                        colors[i + 1] = 0.9;
+                        colors[i + 2] = 1.0;
+                    } else if (colorChoice < 0.95) {
+                        // Bright yellow stars (15%)
+                        colors[i] = 1.0;
+                        colors[i + 1] = 1.0;
+                        colors[i + 2] = 0.9;
+                    } else {
+                        // Bright red stars (5%)
+                        colors[i] = 1.0;
+                        colors[i + 1] = 0.8;
+                        colors[i + 2] = 0.8;
+                    }
+                }
+
+                geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+                geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+                const material = new THREE.ShaderMaterial({
+                    uniforms: {
+                        time: { value: 0 },
+                        opacity: { value: 1.0 } // Full opacity
+                    },
+                    vertexShader: `
+                        attribute float size;
+                        attribute vec3 color;
+                        uniform float time;
+                        varying float vAlpha;
+                        varying vec3 vColor;
+                        
+                        void main() {
+                            vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                            
+                            // Create slower, more subtle twinkling effect
+                            float twinkle = sin(time * 0.5 + position.x * 0.01 + position.y * 0.015) * 0.3 + 0.7;
+                            twinkle *= sin(time * 0.3 + position.z * 0.01) * 0.2 + 0.8;
+                            vAlpha = twinkle;
+                            vColor = color;
+                            
+                            gl_PointSize = size * (500.0 / -mvPosition.z) * twinkle; // Much larger point size
+                            gl_Position = projectionMatrix * mvPosition;
+                        }
+                    `,
+                    fragmentShader: `
+                        uniform float opacity;
+                        varying float vAlpha;
+                        varying vec3 vColor;
+                        
+                        void main() {
+                            vec2 center = vec2(0.5, 0.5);
+                            float dist = distance(gl_PointCoord, center);
+                            
+                            if (dist > 0.5) discard;
+                            
+                            float alpha = 1.0 - (dist * 2.0);
+                            alpha = alpha * alpha * vAlpha * opacity;
+                            
+                            // Make stars brighter
+                            vec3 brightColor = vColor * 1.5;
+                            gl_FragColor = vec4(brightColor, alpha);
+                        }
+                    `,
+                    transparent: true,
+                    blending: THREE.AdditiveBlending
+                });
+
+                const stars = new THREE.Points(geometry, material);
+                this.backgroundGroup.add(stars);
+                this.backgroundStarMaterial = material;
             }
 
             loadSVG(svgString) {
@@ -767,6 +875,12 @@
                 }
             }
 
+            updateBackgroundOpacity() {
+                if (this.backgroundStarMaterial) {
+                    this.backgroundStarMaterial.uniforms.opacity.value = this.backgroundOpacity;
+                }
+            }
+
 
 
             setupCamera() {
@@ -803,10 +917,14 @@
                 this.constellationGroup.rotation.x = this.currentRotation.x;
                 this.constellationGroup.rotation.y = this.currentRotation.y;
 
-                // Gentle background rotation
-                this.backgroundGroup.rotation.y += 0.0005;
+                // Gentle background rotation - much slower
+                this.backgroundGroup.rotation.y += 0.0001;
 
                 // Update shader uniforms
+                if (this.backgroundStarMaterial) {
+                    this.backgroundStarMaterial.uniforms.time.value = this.animationOffset * 10;
+                }
+
                 this.constellationOutlines.forEach(outline => {
                     if (outline.material && outline.material.uniforms) {
                         outline.material.uniforms.time.value = this.animationOffset * 10;

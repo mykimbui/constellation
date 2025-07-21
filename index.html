@@ -211,7 +211,7 @@
             
             <div class="control-group">
                 <label for="constellationSize">Constellation Size</label>
-                <input type="range" id="constellationSize" class="slider" min="0.5" max="1" value="1.5" step="0.1">
+                <input type="range" id="constellationSize" class="slider" min="0.1" max="1" value="0.5" step="0.1">
                 <div class="value" id="constellationSizeValue">1.5</div>
             </div>
 
@@ -339,16 +339,19 @@
                 this.constellationStars = [];
                 this.svgPaths = [];
                 this.svgBounds = null;
+                this.constellationOutlines2 = [];
+                this.constellationStars2 = [];
+                this.svgPaths2 = [];
+                this.svgBounds2 = null;
                 this.currentShape = 0;
                 this.isMorphing = false;
-                this.autoSwitch = true;
-                this.switchInterval = 3000; // 3 seconds
-                this.lastSwitchTime = Date.now();
 
                 // Groups
                 this.constellationGroup = new THREE.Group();
+                this.constellationGroup2 = new THREE.Group();
                 this.backgroundGroup = new THREE.Group();
                 this.scene.add(this.constellationGroup);
+                this.scene.add(this.constellationGroup2);
                 this.scene.add(this.backgroundGroup);
 
                 // Post-processing setup
@@ -362,8 +365,29 @@
   <path d="M19.0195 57.251H23.9883C24.3268 57.2508 24.624 57.0241 24.7139 56.6973V56.6963L27.2051 47.415V47.4141C27.3166 46.9938 27.3307 46.5549 27.2471 46.1299L27.2051 45.9482L25.418 39.2871C24.5406 36.0212 22.039 33.4477 18.8154 32.4707L18.501 32.3809L11.8281 30.5957C11.347 30.4686 10.8415 30.4684 10.3604 30.5957H10.3613L1.06445 33.083L1.05859 33.085L0.939453 33.126C0.674993 33.2434 0.501953 33.5058 0.501953 33.8027V38.7666C0.502161 39.2262 0.912605 39.57 1.35352 39.5068L1.44238 39.4893C5.70009 38.3482 10.5334 37.0553 13.5684 36.2441H13.5693C14.8827 35.8947 15.8256 37.5077 14.8545 38.4746H14.8535L0.719727 52.585C0.578074 52.7297 0.500025 52.9195 0.5 53.1152C0.5 55.3976 2.35501 57.251 4.64453 57.251C4.84199 57.2509 5.03572 57.171 5.17773 57.0303L19.3105 42.9189C20.2724 41.9586 21.8965 42.8857 21.541 44.207L18.2939 56.3105V56.3115C18.1673 56.7819 18.5236 57.2507 19.0195 57.251Z" stroke="#1A1A1A" stroke-miterlimit="10"/>
 </svg>`;
 
-                this.geometricSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="71" height="50" viewBox="0 0 71 50" fill="none">
-  <path d="M18.5887 7.72405e-06C20.7109 -0.00224775 22.8048 0.489487 24.7059 1.43663C26.6071 2.38376 28.264 3.76054 29.5464 5.45891L29.7614 5.22287C32.0343 2.95501 35.1328 1.56113 38.5443 1.56113C43.241 1.56113 47.3103 4.18577 49.502 8.09541C51.447 7.22069 53.5542 6.76896 55.6854 6.76987C64.1384 6.76987 71 13.7247 71 22.3059C71 30.8875 64.1384 37.8414 55.6854 37.8414C54.6524 37.8414 53.6452 37.7366 52.659 37.5398C50.7414 40.9773 47.0758 43.3131 42.9012 43.3131C41.2016 43.3163 39.5239 42.9285 37.9967 42.1794C36.0528 46.7721 31.5266 49.9995 26.2565 50C20.7513 50 16.0818 46.5091 14.2812 41.602C13.4799 41.7722 12.6631 41.8577 11.8441 41.8572C5.29602 41.8577 0 36.4512 0 29.8121C0 25.3511 2.38444 21.4665 5.92253 19.3673C5.17189 17.6279 4.78553 15.7521 4.78747 13.8564C4.78747 6.1939 10.9709 7.72405e-06 18.5887 7.72405e-06Z" fill="white"/>
+                this.geometricSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="83" height="58" viewBox="0 0 83 58" fill="none">
+  <g clip-path="url(#clip0_6290_28488)">
+    <path d="M34.5395 6.32583C37.2164 3.54126 40.9431 1.81437 45.0646 1.81437C50.5436 1.81437 55.3237 4.86444 57.8695 9.39247C60.0816 8.40572 62.5305 7.85683 65.1064 7.85683C74.9884 7.85683 82.9999 15.9248 82.9999 25.8768C82.9999 35.8288 74.9884 43.8981 65.1064 43.8981C63.9229 43.8988 62.7419 43.7815 61.5819 43.5475C59.3403 47.5395 55.0684 50.2369 50.1654 50.2369C48.113 50.2369 46.1715 49.7636 44.4431 48.922C42.1706 54.2585 36.8761 58.0003 30.7056 58.0003C24.535 58.0003 18.8031 53.941 16.7008 48.2478C15.7822 48.4427 14.8304 48.5442 13.8536 48.5442C6.20267 48.5442 0.000244141 42.2882 0.000244141 34.5696C0.000244141 29.3972 2.78705 24.8808 6.92742 22.4645C6.07485 20.5062 5.60075 18.3448 5.60075 16.0727C5.60075 7.1959 12.8188 0.000305176 21.722 0.000305176C26.949 0.000305176 31.5944 2.48159 34.5399 6.32616" fill="#00A1E0"/>
+    <path d="M12.0218 30.0774C15.057 33.4397 21.2192 28.3817 15.46 26.5547C11.6573 25.4884 15.0961 23.7121 16.9912 25.1424C17.2342 25.3827 17.6954 24.031 17.4796 23.9673C13.8707 21.2501 9.38042 26.7579 14.7296 27.8868C16.4368 28.087 16.9016 29.7377 15.0556 29.8766C12.9451 30.03 12.5142 27.9587 12.0215 30.0771L12.0218 30.0774Z" fill="white"/>
+    <path d="M36.9466 30.0774C39.9818 33.4397 46.144 28.3817 40.3845 26.5547C36.5818 25.4884 40.0203 23.7121 41.9157 25.1424C42.1587 25.3827 42.6195 24.031 42.404 23.9673C38.7952 21.2501 34.3046 26.7579 39.6541 27.8868C41.3626 28.0874 41.8277 29.7377 39.9801 29.8766C37.9021 30.038 37.4313 27.9634 36.9463 30.0771L36.9466 30.0774Z" fill="white"/>
+    <path d="M55.3832 25.7015C53.6429 20.8261 46.9733 24.2878 48.8597 28.7519C50.5964 33.5862 57.2819 30.1914 55.3832 25.7015Z" fill="white"/>
+    <path d="M50.2956 27.2262C49.8982 23.846 54.3513 23.8523 53.9619 27.2262C54.3497 30.6147 49.8989 30.6233 50.2956 27.2262Z" fill="#00A1E0"/>
+    <path d="M67.0537 29.6097C63.9671 30.4506 62.1514 28.2358 63.742 25.3518C64.404 24.2464 66.1128 24.8825 66.9863 24.7764C68.4431 22.491 63.2072 23.1974 62.5043 24.4609C60.5419 26.8815 61.7185 31.3688 65.3326 31.0993C66.6453 30.9614 67.9358 31.1513 67.054 29.6097H67.0537Z" fill="white"/>
+    <path d="M74.3251 25.4337C67.9986 17.242 64.0142 34.5743 74.1545 30.623C74.3756 30.5514 73.8803 29.6541 73.8796 29.5139C72.4693 29.7018 69.4916 30.4592 69.5178 27.6226C69.6622 27.5069 74.4619 27.855 74.4679 27.5026C74.4729 27.4506 74.6339 26.5155 74.3251 25.4333V25.4337Z" fill="white"/>
+    <path d="M69.5403 26.4383C69.7514 23.9925 72.8875 23.9514 72.9715 26.4383H69.5403Z" fill="#00A1E0"/>
+    <path d="M35.7956 25.4337C35.2591 23.4449 32.9573 22.9083 31.3016 23.6441C26.2214 26.671 31.5968 33.7115 35.6661 30.3933C35.6658 30.3933 35.3524 29.5142 35.3524 29.5142C33.942 29.7012 30.9637 30.4609 30.9896 27.623C31.1336 27.5073 35.9337 27.8553 35.9397 27.503C35.9447 27.4509 36.1053 26.5159 35.7956 25.4337Z" fill="white"/>
+    <path d="M34.4429 26.4387H31.0117C31.0429 24.0751 34.5203 24.0187 34.4429 26.4387Z" fill="#00A1E0"/>
+    <path d="M19.0611 24.1795C19.1458 24.2626 19.3516 25.2961 19.5594 25.1712C22.5773 23.3551 24.636 26.5212 22.5272 26.2086C15.1979 26.321 19.1653 33.4854 24.8542 30.5046C25.2702 26.0045 24.7469 21.0475 19.0611 24.1795Z" fill="white"/>
+    <path d="M20.613 29.5836C18.9806 27.7987 21.9858 27.0293 23.3218 27.5086C23.3228 27.5086 23.3198 29.6943 23.3228 29.6919C22.8158 29.8471 20.9928 29.9995 20.613 29.5832V29.5836Z" fill="#00A1E0"/>
+    <path d="M61.3293 23.7336C60.7177 23.025 58.9143 23.5009 58.3971 24.2209V23.6368C58.4674 23.3922 56.8134 23.4071 56.8871 23.6368C57.0219 23.7833 56.6228 30.9756 57.0332 30.9468C60.5916 31.9126 56.014 24.2189 60.7924 24.8715C61.1048 24.8082 61.2031 23.8997 61.3289 23.7336" fill="white"/>
+    <path d="M49.4653 20.4135C47.1984 19.6998 45.4398 21.1215 45.2728 23.4837C45.1131 23.5633 44.0513 23.321 44.0195 23.623C43.7054 24.9766 43.7874 24.7904 45.06 24.7774C44.226 26.4493 44.9288 34.0095 41.7061 32.9495C41.4372 32.865 41.2861 33.8613 41.1746 34.0022C41.5202 34.6485 42.984 34.3691 43.5746 34.2067C46.1602 33.0821 45.8368 27.0555 46.5961 24.7774C46.5958 24.7774 48.1801 24.7774 48.1801 24.7774C48.4228 24.8503 48.4573 23.7473 48.5207 23.6385C48.6296 23.3091 46.9401 23.557 46.8252 23.4837C46.8335 23.4496 46.9032 22.909 47.0795 22.4002C47.3996 21.3057 48.5257 21.7032 49.1867 21.5895C49.1552 21.4996 49.7631 20.4221 49.4656 20.4135" fill="white"/>
+    <path d="M27.9737 30.801C28.052 31.0549 26.3409 31.0208 26.4226 30.801C26.5527 30.6558 26.1696 20.3856 26.5594 20.4055C26.5594 20.4052 27.8356 20.4052 27.8356 20.4052C28.229 20.3843 27.8429 30.6558 27.974 30.801H27.9737Z" fill="white"/>
+  </g>
+  <defs>
+    <clipPath id="clip0_6290_28488">
+      <rect width="83" height="58" fill="white"/>
+    </clipPath>
+  </defs>
 </svg>`;
 
                 this.init();
@@ -406,7 +430,7 @@
                 this.setupControls();
                 this.setupFileInput();
                 this.createBackgroundStarfield();
-                this.loadSVG(this.defaultSVG);
+                this.loadBothSVGs();
                 this.setupCamera();
                 this.animate();
                 this.handleResize();
@@ -456,13 +480,15 @@
                             valueElement.textContent = value;
                             
                             if (controlName === 'pathDensity') {
-                                this.extractPointsFromPaths();
+                                this.extractPointsFromPaths(1);
+                                this.extractPointsFromPaths(2);
                             } else if (controlName === 'constellationSize') {
                                 this.updateConstellationScale();
                             } else if (controlName === 'outlineOpacity') {
                                 this.updateOutlineMaterials();
                             } else if (controlName === 'lineThickness') {
-                                this.extractPointsFromPaths(); // Recreate with new thickness
+                                this.extractPointsFromPaths(1); // Recreate with new thickness
+                                this.extractPointsFromPaths(2);
                             } else if (controlName === 'bloomIntensity' || controlName === 'bloomRadius' || controlName === 'bloomThreshold') {
                                 this.updateBloomSettings();
                             } else if (controlName === 'backgroundOpacity') {
@@ -483,7 +509,7 @@
                         if (file && file.type === 'image/svg+xml') {
                             const reader = new FileReader();
                             reader.onload = (e) => {
-                                this.loadSVG(e.target.result);
+                                this.loadSVG(e.target.result, 1);
                             };
                             reader.readAsText(file);
                         }
@@ -592,7 +618,12 @@
                 this.backgroundStarMaterial = material;
             }
 
-            loadSVG(svgString) {
+            loadBothSVGs() {
+                this.loadSVG(this.defaultSVG, 1);
+                this.loadSVG(this.geometricSVG, 2);
+            }
+
+            loadSVG(svgString, constellationNumber = 1) {
                 try {
                     const parser = new DOMParser();
                     const svgDoc = parser.parseFromString(svgString, 'image/svg+xml');
@@ -602,57 +633,95 @@
                         const viewBox = svgElement.getAttribute('viewBox');
                         if (viewBox) {
                             const [x, y, width, height] = viewBox.split(' ').map(Number);
-                            this.svgBounds = { x, y, width, height };
+                            if (constellationNumber === 1) {
+                                this.svgBounds = { x, y, width, height };
+                            } else {
+                                this.svgBounds2 = { x, y, width, height };
+                            }
                         } else {
-                            this.svgBounds = { x: 0, y: 0, width: 100, height: 100 };
+                            if (constellationNumber === 1) {
+                                this.svgBounds = { x: 0, y: 0, width: 100, height: 100 };
+                            } else {
+                                this.svgBounds2 = { x: 0, y: 0, width: 100, height: 100 };
+                            }
                         }
                         
-                        this.svgPaths = Array.from(svgElement.querySelectorAll('path')).map(path => ({
+                        const paths = Array.from(svgElement.querySelectorAll('path')).map(path => ({
                             d: path.getAttribute('d')
                         }));
                         
-                        this.extractPointsFromPaths();
+                        if (constellationNumber === 1) {
+                            this.svgPaths = paths;
+                        } else {
+                            this.svgPaths2 = paths;
+                        }
+                        
+                        this.extractPointsFromPaths(constellationNumber);
                     }
                 } catch (error) {
                     console.error('Error loading SVG:', error);
                 }
             }
 
-            extractPointsFromPaths() {
+            extractPointsFromPaths(constellationNumber = 1) {
+                const group = constellationNumber === 1 ? this.constellationGroup : this.constellationGroup2;
+                const outlines = constellationNumber === 1 ? this.constellationOutlines : this.constellationOutlines2;
+                const stars = constellationNumber === 1 ? this.constellationStars : this.constellationStars2;
+                const paths = constellationNumber === 1 ? this.svgPaths : this.svgPaths2;
+                const bounds = constellationNumber === 1 ? this.svgBounds : this.svgBounds2;
+
                 // Clear existing constellation outlines and stars
-                this.constellationOutlines.forEach(outline => {
-                    this.constellationGroup.remove(outline);
+                outlines.forEach(outline => {
+                    group.remove(outline);
                 });
-                this.constellationOutlines = [];
+                if (constellationNumber === 1) {
+                    this.constellationOutlines = [];
+                } else {
+                    this.constellationOutlines2 = [];
+                }
 
-                this.constellationStars.forEach(star => {
-                    this.constellationGroup.remove(star);
+                stars.forEach(star => {
+                    group.remove(star);
                 });
-                this.constellationStars = [];
+                if (constellationNumber === 1) {
+                    this.constellationStars = [];
+                } else {
+                    this.constellationStars2 = [];
+                }
 
-                if (!this.svgPaths.length || !this.svgBounds) return;
+                if (!paths.length || !bounds) return;
 
                 const scale = 4; // Scale for 3D space
+                const offsetX = constellationNumber === 1 ? 40 : -40; // Top right vs bottom left - much more horizontal spacing
+                const offsetY = constellationNumber === 1 ? 10 : -10; // Reduced vertical spacing - logos closer together
 
                 // Create constellation outlines
-                this.svgPaths.forEach(pathData => {
+                paths.forEach(pathData => {
                     if (pathData.d) {
-                        const outline = this.createConstellationOutline(pathData.d, scale, this.svgBounds);
+                        const outline = this.createConstellationOutline(pathData.d, scale, bounds, offsetX, offsetY);
                         if (outline) {
-                            this.constellationOutlines.push(outline);
-                            this.constellationGroup.add(outline);
+                            if (constellationNumber === 1) {
+                                this.constellationOutlines.push(outline);
+                            } else {
+                                this.constellationOutlines2.push(outline);
+                            }
+                            group.add(outline);
                         }
                     }
                 });
 
                 // Create random stars along the paths
-                this.svgPaths.forEach(pathData => {
+                paths.forEach(pathData => {
                     if (pathData.d) {
-                        const starPoints = this.generateRandomStarPoints(pathData.d, scale, this.svgBounds);
+                        const starPoints = this.generateRandomStarPoints(pathData.d, scale, bounds, offsetX, offsetY);
                         starPoints.forEach(point => {
                             const star = this.createConstellationStar(point);
-                            this.constellationStars.push(star);
-                            this.constellationGroup.add(star);
+                            if (constellationNumber === 1) {
+                                this.constellationStars.push(star);
+                            } else {
+                                this.constellationStars2.push(star);
+                            }
+                            group.add(star);
                         });
                     }
                 });
@@ -666,9 +735,10 @@
 
             updateConstellationScale() {
                 this.constellationGroup.scale.setScalar(this.constellationSize);
+                this.constellationGroup2.scale.setScalar(this.constellationSize);
             }
 
-            generateRandomStarPoints(pathString, scale, bounds) {
+            generateRandomStarPoints(pathString, scale, bounds, offsetX = 0, offsetY = 0) {
                 const points = [];
                 
                 const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -694,9 +764,9 @@
                         const point = pathElement.getPointAtLength(randomDistance);
                         
                         if (point) {
-                            // Convert 2D SVG coordinates to 3D positions
-                            const x = (point.x - bounds.x - bounds.width / 2) * scale / 10;
-                            const y = -(point.y - bounds.y - bounds.height / 2) * scale / 10;
+                            // Convert 2D SVG coordinates to 3D positions with offset
+                            const x = (point.x - bounds.x - bounds.width / 2) * scale / 10 + offsetX;
+                            const y = -(point.y - bounds.y - bounds.height / 2) * scale / 10 + offsetY;
                             const z = (Math.random() - 0.5) * 2; // Small depth variation
                             
                             points.push({ 
@@ -759,7 +829,7 @@
                 return star;
             }
 
-            createConstellationOutline(pathString, scale, bounds) {
+            createConstellationOutline(pathString, scale, bounds, offsetX = 0, offsetY = 0) {
                 const points = [];
                 
                 const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -785,9 +855,9 @@
                         const point = pathElement.getPointAtLength(distance);
                         
                         if (point) {
-                            // Convert 2D SVG coordinates to 3D positions
-                            const x = (point.x - bounds.x - bounds.width / 2) * scale / 10;
-                            const y = -(point.y - bounds.y - bounds.height / 2) * scale / 10;
+                            // Convert 2D SVG coordinates to 3D positions with offset
+                            const x = (point.x - bounds.x - bounds.width / 2) * scale / 10 + offsetX;
+                            const y = -(point.y - bounds.y - bounds.height / 2) * scale / 10 + offsetY;
                             const z = 0; // Keep outline flat
                             
                             points.push(new THREE.Vector3(x, y, z));
@@ -879,6 +949,11 @@
                         outline.material.uniforms.opacity.value = this.outlineOpacity;
                     }
                 });
+                this.constellationOutlines2.forEach(outline => {
+                    if (outline.material && outline.material.uniforms) {
+                        outline.material.uniforms.opacity.value = this.outlineOpacity;
+                    }
+                });
             }
 
 
@@ -886,7 +961,9 @@
             updatePointInfo() {
                 const pointInfoElement = document.getElementById('pointInfo');
                 if (pointInfoElement) {
-                    pointInfoElement.textContent = `Outlines: ${this.constellationOutlines.length} | Stars: ${this.constellationStars.length}`;
+                    const totalOutlines = this.constellationOutlines.length + this.constellationOutlines2.length;
+                    const totalStars = this.constellationStars.length + this.constellationStars2.length;
+                    pointInfoElement.textContent = `Outlines: ${totalOutlines} | Stars: ${totalStars}`;
                 }
             }
 
@@ -898,89 +975,7 @@
                 }
             }
 
-            checkAutoSwitch() {
-                const currentTime = Date.now();
-                if (this.autoSwitch && currentTime - this.lastSwitchTime > this.switchInterval) {
-                    console.log('Auto switching...');
-                    this.smoothSwitch();
-                    this.lastSwitchTime = currentTime;
-                }
-            }
 
-            smoothSwitch() {
-                this.currentShape = this.currentShape === 0 ? 1 : 0;
-                const newSVG = this.currentShape === 0 ? this.defaultSVG : this.geometricSVG;
-                
-                // Fade out current constellation
-                this.fadeOutConstellation(() => {
-                    // Load new SVG
-                    this.loadSVG(newSVG);
-                    // Fade in new constellation
-                    this.fadeInConstellation();
-                });
-            }
-
-            fadeOutConstellation(callback) {
-                const fadeDuration = 1000; // 1 second fade
-                const startTime = Date.now();
-                const fadeOut = () => {
-                    const elapsed = Date.now() - startTime;
-                    const progress = Math.min(elapsed / fadeDuration, 1);
-                    const opacity = 1 - progress;
-
-                    // Fade out outlines
-                    this.constellationOutlines.forEach(outline => {
-                        if (outline.material && outline.material.uniforms) {
-                            outline.material.uniforms.opacity.value = this.outlineOpacity * opacity;
-                        }
-                    });
-
-                    // Fade out stars
-                    this.constellationStars.forEach(star => {
-                        if (star.material) {
-                            star.material.opacity = opacity;
-                            star.material.transparent = true;
-                        }
-                    });
-
-                    if (progress < 1) {
-                        requestAnimationFrame(fadeOut);
-                    } else {
-                        callback();
-                    }
-                };
-                fadeOut();
-            }
-
-            fadeInConstellation() {
-                const fadeDuration = 1000; // 1 second fade
-                const startTime = Date.now();
-                const fadeIn = () => {
-                    const elapsed = Date.now() - startTime;
-                    const progress = Math.min(elapsed / fadeDuration, 1);
-                    const opacity = progress;
-
-                    // Fade in outlines
-                    this.constellationOutlines.forEach(outline => {
-                        if (outline.material && outline.material.uniforms) {
-                            outline.material.uniforms.opacity.value = this.outlineOpacity * opacity;
-                        }
-                    });
-
-                    // Fade in stars
-                    this.constellationStars.forEach(star => {
-                        if (star.material) {
-                            star.material.opacity = opacity;
-                            star.material.transparent = true;
-                        }
-                    });
-
-                    if (progress < 1) {
-                        requestAnimationFrame(fadeIn);
-                    }
-                };
-                fadeIn();
-            }
 
             updateBackgroundOpacity() {
                 if (this.backgroundStarMaterial) {
@@ -1020,9 +1015,11 @@
                 this.currentRotation.x += (this.targetRotation.x - this.currentRotation.x) * dampening;
                 this.currentRotation.y += (this.targetRotation.y - this.currentRotation.y) * dampening;
 
-                // Apply rotation to constellation group
+                // Apply rotation to constellation groups
                 this.constellationGroup.rotation.x = this.currentRotation.x;
                 this.constellationGroup.rotation.y = this.currentRotation.y;
+                this.constellationGroup2.rotation.x = this.currentRotation.x;
+                this.constellationGroup2.rotation.y = this.currentRotation.y;
 
                 // Gentle background rotation - much slower
                 this.backgroundGroup.rotation.y += 0.0001;
@@ -1044,8 +1041,19 @@
                     }
                 });
 
-                // Check for auto-switching
-                this.checkAutoSwitch();
+                this.constellationOutlines2.forEach(outline => {
+                    if (outline.material && outline.material.uniforms) {
+                        outline.material.uniforms.time.value = this.animationOffset * 10;
+                    }
+                });
+
+                this.constellationStars2.forEach(star => {
+                    if (star.material && star.material.uniforms) {
+                        star.material.uniforms.time.value = this.animationOffset * 10;
+                    }
+                });
+
+
 
                 this.composer.render();
             }
@@ -1057,7 +1065,7 @@
                 if (svgTextElement) {
                     const svgText = svgTextElement.value.trim();
                     if (svgText) {
-                        nightSkyInstance.loadSVG(svgText);
+                        nightSkyInstance.loadSVG(svgText, 1);
                     }
                 }
             }
@@ -1066,7 +1074,7 @@
         function resetToDefault() {
             if (nightSkyInstance) {
                 nightSkyInstance.currentShape = 0;
-                nightSkyInstance.loadSVG(nightSkyInstance.defaultSVG);
+                nightSkyInstance.loadBothSVGs();
                 const svgTextElement = document.getElementById('svgText');
                 const svgFileElement = document.getElementById('svgFile');
                 if (svgTextElement) svgTextElement.value = '';

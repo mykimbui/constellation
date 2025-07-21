@@ -199,13 +199,13 @@
 
             <div class="control-group">
                 <label for="outlineOpacity">Outline Opacity</label>
-                <input type="range" id="outlineOpacity" class="slider" min="0.7" max="1" value="0.6=7" step="0.05">
+                <input type="range" id="outlineOpacity" class="slider" min="0.7" max="1" value="1" step="0.05">
                 <div class="value" id="outlineOpacityValue">0.6</div>
             </div>
 
             <div class="control-group">
                 <label for="lineThickness">Line Thickness</label>
-                <input type="range" id="lineThickness" class="slider" min="0.02" max="1" value="0.06" step="0.01">
+                <input type="range" id="lineThickness" class="slider" min="0.02" max="1" value="0.9" step="0.01">
                 <div class="value" id="lineThicknessValue">0.05</div>
             </div>
 
@@ -237,6 +237,10 @@
 
             <div class="control-group">
                 <button class="button" onclick="toggleShape()">Switch Constellation</button>
+            </div>
+
+            <div class="control-group">
+                <button class="button" onclick="toggleAutoSwitch()">Toggle Auto Switch</button>
             </div>
 
             <div class="svg-section">
@@ -310,21 +314,18 @@
                 // Constellation data
                 this.constellationOutlines = [];
                 this.constellationStars = [];
-                this.constellationOutlines2 = [];
-                this.constellationStars2 = [];
                 this.svgPaths = [];
                 this.svgBounds = null;
-                this.svgPaths2 = [];
-                this.svgBounds2 = null;
                 this.currentShape = 0;
                 this.isMorphing = false;
+                this.autoSwitch = true;
+                this.switchInterval = 1000; // 5 seconds
+                this.lastSwitchTime = 0;
 
                 // Groups
                 this.constellationGroup = new THREE.Group();
-                this.constellationGroup2 = new THREE.Group();
                 this.backgroundGroup = new THREE.Group();
                 this.scene.add(this.constellationGroup);
-                this.scene.add(this.constellationGroup2);
                 this.scene.add(this.backgroundGroup);
 
                 // Post-processing setup
@@ -338,19 +339,14 @@
                     <path fill="#333" d="M26,39.3c-1-3.5-3.7-6.3-7.3-7.3l-6.7-1.8c-.6-.2-1.2-.2-1.7,0l-9.3,2.5c-.6,0-.9.6-.9,1.2v5c0,.8.8,1.4,1.6,1.2,4.3-1.1,9.1-2.4,12.1-3.2.8-.2,1.4.8.8,1.4L.5,52.4c-.2.2-.4.6-.4.9,0,2.6,2.1,4.6,4.6,4.6s.7-.1.9-.4l14.1-14.1c.6-.6,1.6,0,1.4.8l-3.2,12.1c-.2.8.4,1.6,1.2,1.6h5c.6,0,1.1-.4,1.2-.9l2.5-9.3c.2-.6.2-1.2,0-1.7l-1.8-6.7Z"/>
                 </svg>`;
 
-                this.geometricSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="83" height="58" viewBox="0 0 83 58" fill="none">
-  <path d="M21.7305 8.9599e-06C24.2113 -0.00260739 26.6591 0.567805 28.8816 1.66649C31.1041 2.76517 33.041 4.36222 34.5402 6.33234L34.7915 6.05853C37.4485 3.42782 41.0707 1.81091 45.0588 1.81091C50.5494 1.81091 55.3065 4.8555 57.8685 9.39067C60.1423 8.376 62.6057 7.852 65.097 7.85305C74.9787 7.85305 83 15.9207 83 25.8748C83 35.8295 74.9787 43.896 65.097 43.896C63.8894 43.896 62.712 43.7745 61.5591 43.5461C59.3174 47.5337 55.0323 50.2432 50.1521 50.2432C48.1653 50.2469 46.204 49.7971 44.4187 48.9281C42.1462 54.2556 36.8551 57.9995 30.6942 58C24.2586 58 18.7998 53.9506 16.6949 48.2584C15.7582 48.4557 14.8034 48.5549 13.846 48.5544C6.19112 48.5549 0 42.2834 0 34.582C0 29.4073 2.78744 24.9012 6.92352 22.466C6.04601 20.4484 5.59435 18.2725 5.59662 16.0734C5.59662 7.18493 12.8251 8.9599e-06 21.7305 8.9599e-06Z" fill="white"/>
+                this.geometricSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="71" height="50" viewBox="0 0 71 50" fill="none">
+  <path d="M18.5887 7.72405e-06C20.7109 -0.00224775 22.8048 0.489487 24.7059 1.43663C26.6071 2.38376 28.264 3.76054 29.5464 5.45891L29.7614 5.22287C32.0343 2.95501 35.1328 1.56113 38.5443 1.56113C43.241 1.56113 47.3103 4.18577 49.502 8.09541C51.447 7.22069 53.5542 6.76896 55.6854 6.76987C64.1384 6.76987 71 13.7247 71 22.3059C71 30.8875 64.1384 37.8414 55.6854 37.8414C54.6524 37.8414 53.6452 37.7366 52.659 37.5398C50.7414 40.9773 47.0758 43.3131 42.9012 43.3131C41.2016 43.3163 39.5239 42.9285 37.9967 42.1794C36.0528 46.7721 31.5266 49.9995 26.2565 50C20.7513 50 16.0818 46.5091 14.2812 41.602C13.4799 41.7722 12.6631 41.8577 11.8441 41.8572C5.29602 41.8577 0 36.4512 0 29.8121C0 25.3511 2.38444 21.4665 5.92253 19.3673C5.17189 17.6279 4.78553 15.7521 4.78747 13.8564C4.78747 6.1939 10.9709 7.72405e-06 18.5887 7.72405e-06Z" fill="white"/>
 </svg>`;
 
                 this.init();
             }
 
-            loadBothSVGs() {
-                // Load first SVG (default)
-                this.loadSVG(this.defaultSVG, 1);
-                // Load second SVG (geometric)
-                this.loadSVG(this.geometricSVG, 2);
-            }
+
 
             setupPostProcessing() {
                 const renderTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight, {
@@ -387,7 +383,7 @@
                 this.setupControls();
                 this.setupFileInput();
                 this.createBackgroundStarfield();
-                this.loadBothSVGs();
+                this.loadSVG(this.defaultSVG);
                 this.setupCamera();
                 this.animate();
                 this.handleResize();
@@ -437,15 +433,13 @@
                             valueElement.textContent = value;
                             
                             if (controlName === 'pathDensity') {
-                                this.extractPointsFromPaths(1);
-                                this.extractPointsFromPaths(2);
+                                this.extractPointsFromPaths();
                             } else if (controlName === 'constellationSize') {
                                 this.updateConstellationScale();
                             } else if (controlName === 'outlineOpacity') {
                                 this.updateOutlineMaterials();
                             } else if (controlName === 'lineThickness') {
-                                this.extractPointsFromPaths(1); // Recreate with new thickness
-                                this.extractPointsFromPaths(2);
+                                this.extractPointsFromPaths(); // Recreate with new thickness
                             } else if (controlName === 'bloomIntensity' || controlName === 'bloomRadius' || controlName === 'bloomThreshold') {
                                 this.updateBloomSettings();
                             } else if (controlName === 'backgroundOpacity') {
@@ -466,9 +460,7 @@
                         if (file && file.type === 'image/svg+xml') {
                             const reader = new FileReader();
                             reader.onload = (e) => {
-                                // Load the uploaded SVG as the first constellation
-                                this.loadSVG(e.target.result, 1);
-                                // Keep the second constellation as is
+                                this.loadSVG(e.target.result);
                             };
                             reader.readAsText(file);
                         }
@@ -577,7 +569,7 @@
                 this.backgroundStarMaterial = material;
             }
 
-            loadSVG(svgString, constellationNumber = 1) {
+            loadSVG(svgString) {
                 try {
                     const parser = new DOMParser();
                     const svgDoc = parser.parseFromString(svgString, 'image/svg+xml');
@@ -587,95 +579,57 @@
                         const viewBox = svgElement.getAttribute('viewBox');
                         if (viewBox) {
                             const [x, y, width, height] = viewBox.split(' ').map(Number);
-                            if (constellationNumber === 1) {
-                                this.svgBounds = { x, y, width, height };
-                            } else {
-                                this.svgBounds2 = { x, y, width, height };
-                            }
+                            this.svgBounds = { x, y, width, height };
                         } else {
-                            if (constellationNumber === 1) {
-                                this.svgBounds = { x: 0, y: 0, width: 100, height: 100 };
-                            } else {
-                                this.svgBounds2 = { x: 0, y: 0, width: 100, height: 100 };
-                            }
+                            this.svgBounds = { x: 0, y: 0, width: 100, height: 100 };
                         }
                         
-                        const paths = Array.from(svgElement.querySelectorAll('path')).map(path => ({
+                        this.svgPaths = Array.from(svgElement.querySelectorAll('path')).map(path => ({
                             d: path.getAttribute('d')
                         }));
                         
-                        if (constellationNumber === 1) {
-                            this.svgPaths = paths;
-                        } else {
-                            this.svgPaths2 = paths;
-                        }
-                        
-                        this.extractPointsFromPaths(constellationNumber);
+                        this.extractPointsFromPaths();
                     }
                 } catch (error) {
                     console.error('Error loading SVG:', error);
                 }
             }
 
-            extractPointsFromPaths(constellationNumber = 1) {
-                const group = constellationNumber === 1 ? this.constellationGroup : this.constellationGroup2;
-                const outlines = constellationNumber === 1 ? this.constellationOutlines : this.constellationOutlines2;
-                const stars = constellationNumber === 1 ? this.constellationStars : this.constellationStars2;
-                const paths = constellationNumber === 1 ? this.svgPaths : this.svgPaths2;
-                const bounds = constellationNumber === 1 ? this.svgBounds : this.svgBounds2;
-
+            extractPointsFromPaths() {
                 // Clear existing constellation outlines and stars
-                outlines.forEach(outline => {
-                    group.remove(outline);
+                this.constellationOutlines.forEach(outline => {
+                    this.constellationGroup.remove(outline);
                 });
-                if (constellationNumber === 1) {
-                    this.constellationOutlines = [];
-                } else {
-                    this.constellationOutlines2 = [];
-                }
+                this.constellationOutlines = [];
 
-                stars.forEach(star => {
-                    group.remove(star);
+                this.constellationStars.forEach(star => {
+                    this.constellationGroup.remove(star);
                 });
-                if (constellationNumber === 1) {
-                    this.constellationStars = [];
-                } else {
-                    this.constellationStars2 = [];
-                }
+                this.constellationStars = [];
 
-                if (!paths.length || !bounds) return;
+                if (!this.svgPaths.length || !this.svgBounds) return;
 
                 const scale = 4; // Scale for 3D space
-                const offsetX = constellationNumber === 1 ? -15 : 15; // Position constellations side by side
-                const offsetY = constellationNumber === 1 ? 10 : -10; // Position first constellation higher (top left)
 
                 // Create constellation outlines
-                paths.forEach(pathData => {
+                this.svgPaths.forEach(pathData => {
                     if (pathData.d) {
-                        const outline = this.createConstellationOutline(pathData.d, scale, bounds, offsetX, offsetY);
+                        const outline = this.createConstellationOutline(pathData.d, scale, this.svgBounds);
                         if (outline) {
-                            if (constellationNumber === 1) {
-                                this.constellationOutlines.push(outline);
-                            } else {
-                                this.constellationOutlines2.push(outline);
-                            }
-                            group.add(outline);
+                            this.constellationOutlines.push(outline);
+                            this.constellationGroup.add(outline);
                         }
                     }
                 });
 
                 // Create random stars along the paths
-                paths.forEach(pathData => {
+                this.svgPaths.forEach(pathData => {
                     if (pathData.d) {
-                        const starPoints = this.generateRandomStarPoints(pathData.d, scale, bounds, offsetX, offsetY);
+                        const starPoints = this.generateRandomStarPoints(pathData.d, scale, this.svgBounds);
                         starPoints.forEach(point => {
                             const star = this.createConstellationStar(point);
-                            if (constellationNumber === 1) {
-                                this.constellationStars.push(star);
-                            } else {
-                                this.constellationStars2.push(star);
-                            }
-                            group.add(star);
+                            this.constellationStars.push(star);
+                            this.constellationGroup.add(star);
                         });
                     }
                 });
@@ -689,10 +643,9 @@
 
             updateConstellationScale() {
                 this.constellationGroup.scale.setScalar(this.constellationSize);
-                this.constellationGroup2.scale.setScalar(this.constellationSize);
             }
 
-            generateRandomStarPoints(pathString, scale, bounds, offsetX = 0, offsetY = 0) {
+            generateRandomStarPoints(pathString, scale, bounds) {
                 const points = [];
                 
                 const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -719,8 +672,8 @@
                         
                         if (point) {
                             // Convert 2D SVG coordinates to 3D positions
-                            const x = (point.x - bounds.x - bounds.width / 2) * scale / 10 + offsetX;
-                            const y = -(point.y - bounds.y - bounds.height / 2) * scale / 10 + offsetY;
+                            const x = (point.x - bounds.x - bounds.width / 2) * scale / 10;
+                            const y = -(point.y - bounds.y - bounds.height / 2) * scale / 10;
                             const z = (Math.random() - 0.5) * 2; // Small depth variation
                             
                             points.push({ 
@@ -774,7 +727,7 @@
                             gl_FragColor = vec4(color, 1.0);
                         }
                     `,
-                    transparent: false
+                    transparent: true
                 });
 
                 const star = new THREE.Mesh(geometry, material);
@@ -783,7 +736,7 @@
                 return star;
             }
 
-            createConstellationOutline(pathString, scale, bounds, offsetX = 0, offsetY = 0) {
+            createConstellationOutline(pathString, scale, bounds) {
                 const points = [];
                 
                 const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -810,8 +763,8 @@
                         
                         if (point) {
                             // Convert 2D SVG coordinates to 3D positions
-                            const x = (point.x - bounds.x - bounds.width / 2) * scale / 10 + offsetX;
-                            const y = -(point.y - bounds.y - bounds.height / 2) * scale / 10 + offsetY;
+                            const x = (point.x - bounds.x - bounds.width / 2) * scale / 10;
+                            const y = -(point.y - bounds.y - bounds.height / 2) * scale / 10;
                             const z = 0; // Keep outline flat
                             
                             points.push(new THREE.Vector3(x, y, z));
@@ -903,11 +856,6 @@
                         outline.material.uniforms.opacity.value = this.outlineOpacity;
                     }
                 });
-                this.constellationOutlines2.forEach(outline => {
-                    if (outline.material && outline.material.uniforms) {
-                        outline.material.uniforms.opacity.value = this.outlineOpacity;
-                    }
-                });
             }
 
 
@@ -915,9 +863,8 @@
             updatePointInfo() {
                 const pointInfoElement = document.getElementById('pointInfo');
                 if (pointInfoElement) {
-                    const totalOutlines = this.constellationOutlines.length + this.constellationOutlines2.length;
-                    const totalStars = this.constellationStars.length + this.constellationStars2.length;
-                    pointInfoElement.textContent = `Outlines: ${totalOutlines} | Stars: ${totalStars}`;
+                    const autoText = this.autoSwitch ? ' | Auto: ON' : ' | Auto: OFF';
+                    pointInfoElement.textContent = `Outlines: ${this.constellationOutlines.length} | Stars: ${this.constellationStars.length}${autoText}`;
                 }
             }
 
@@ -927,6 +874,86 @@
                     this.bloomPass.radius = this.bloomRadius;
                     this.bloomPass.threshold = this.bloomThreshold;
                 }
+            }
+
+            checkAutoSwitch() {
+                if (this.autoSwitch && this.animationOffset * 10 - this.lastSwitchTime > this.switchInterval) {
+                    this.smoothSwitch();
+                    this.lastSwitchTime = this.animationOffset * 10;
+                }
+            }
+
+            smoothSwitch() {
+                this.currentShape = this.currentShape === 0 ? 1 : 0;
+                const newSVG = this.currentShape === 0 ? this.defaultSVG : this.geometricSVG;
+                
+                // Fade out current constellation
+                this.fadeOutConstellation(() => {
+                    // Load new SVG
+                    this.loadSVG(newSVG);
+                    // Fade in new constellation
+                    this.fadeInConstellation();
+                });
+            }
+
+            fadeOutConstellation(callback) {
+                const fadeDuration = 1000; // 1 second fade
+                const startTime = this.animationOffset * 10;
+                const fadeOut = () => {
+                    const elapsed = (this.animationOffset * 10 - startTime) * 1000;
+                    const progress = Math.min(elapsed / fadeDuration, 1);
+                    const opacity = 1 - progress;
+
+                    // Fade out outlines
+                    this.constellationOutlines.forEach(outline => {
+                        if (outline.material && outline.material.uniforms) {
+                            outline.material.uniforms.opacity.value = this.outlineOpacity * opacity;
+                        }
+                    });
+
+                    // Fade out stars
+                    this.constellationStars.forEach(star => {
+                        if (star.material) {
+                            star.material.opacity = opacity;
+                        }
+                    });
+
+                    if (progress < 1) {
+                        requestAnimationFrame(fadeOut);
+                    } else {
+                        callback();
+                    }
+                };
+                fadeOut();
+            }
+
+            fadeInConstellation() {
+                const fadeDuration = 1000; // 1 second fade
+                const startTime = this.animationOffset * 10;
+                const fadeIn = () => {
+                    const elapsed = (this.animationOffset * 10 - startTime) * 1000;
+                    const progress = Math.min(elapsed / fadeDuration, 1);
+                    const opacity = progress;
+
+                    // Fade in outlines
+                    this.constellationOutlines.forEach(outline => {
+                        if (outline.material && outline.material.uniforms) {
+                            outline.material.uniforms.opacity.value = this.outlineOpacity * opacity;
+                        }
+                    });
+
+                    // Fade in stars
+                    this.constellationStars.forEach(star => {
+                        if (star.material) {
+                            star.material.opacity = opacity;
+                        }
+                    });
+
+                    if (progress < 1) {
+                        requestAnimationFrame(fadeIn);
+                    }
+                };
+                fadeIn();
             }
 
             updateBackgroundOpacity() {
@@ -967,11 +994,9 @@
                 this.currentRotation.x += (this.targetRotation.x - this.currentRotation.x) * dampening;
                 this.currentRotation.y += (this.targetRotation.y - this.currentRotation.y) * dampening;
 
-                // Apply rotation to constellation groups
+                // Apply rotation to constellation group
                 this.constellationGroup.rotation.x = this.currentRotation.x;
                 this.constellationGroup.rotation.y = this.currentRotation.y;
-                this.constellationGroup2.rotation.x = this.currentRotation.x;
-                this.constellationGroup2.rotation.y = this.currentRotation.y;
 
                 // Gentle background rotation - much slower
                 this.backgroundGroup.rotation.y += 0.0001;
@@ -987,23 +1012,14 @@
                     }
                 });
 
-                this.constellationOutlines2.forEach(outline => {
-                    if (outline.material && outline.material.uniforms) {
-                        outline.material.uniforms.time.value = this.animationOffset * 10;
-                    }
-                });
-
                 this.constellationStars.forEach(star => {
                     if (star.material && star.material.uniforms) {
                         star.material.uniforms.time.value = this.animationOffset * 10;
                     }
                 });
 
-                this.constellationStars2.forEach(star => {
-                    if (star.material && star.material.uniforms) {
-                        star.material.uniforms.time.value = this.animationOffset * 10;
-                    }
-                });
+                // Check for auto-switching
+                this.checkAutoSwitch();
 
                 this.composer.render();
             }
@@ -1015,9 +1031,7 @@
                 if (svgTextElement) {
                     const svgText = svgTextElement.value.trim();
                     if (svgText) {
-                        // Load the pasted SVG as the first constellation
-                        nightSkyInstance.loadSVG(svgText, 1);
-                        // Keep the second constellation as is
+                        nightSkyInstance.loadSVG(svgText);
                     }
                 }
             }
@@ -1026,7 +1040,7 @@
         function resetToDefault() {
             if (nightSkyInstance) {
                 nightSkyInstance.currentShape = 0;
-                nightSkyInstance.loadBothSVGs();
+                nightSkyInstance.loadSVG(nightSkyInstance.defaultSVG);
                 const svgTextElement = document.getElementById('svgText');
                 const svgFileElement = document.getElementById('svgFile');
                 if (svgTextElement) svgTextElement.value = '';
@@ -1036,8 +1050,17 @@
 
         function toggleShape() {
             if (nightSkyInstance) {
-                // Reload both SVGs to refresh the side-by-side display
-                nightSkyInstance.loadBothSVGs();
+                nightSkyInstance.currentShape = nightSkyInstance.currentShape === 0 ? 1 : 0;
+                const newSVG = nightSkyInstance.currentShape === 0 ? 
+                    nightSkyInstance.defaultSVG : nightSkyInstance.geometricSVG;
+                nightSkyInstance.loadSVG(newSVG);
+            }
+        }
+
+        function toggleAutoSwitch() {
+            if (nightSkyInstance) {
+                nightSkyInstance.autoSwitch = !nightSkyInstance.autoSwitch;
+                nightSkyInstance.updatePointInfo();
             }
         }
 

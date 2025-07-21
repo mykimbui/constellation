@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three.js Night Sky Constellation Map</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+            color: white;
+        }
+
+        .container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 300px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+
+        .controls h1 {
+            font-size: 16px;
+            font-weight: normal;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #fff;
+            text-align: center;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-group label {
+            display: block;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+            color: #ccc;
+        }
+
+        .slider {
+            width: 100%;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.3);
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+            border-radius: 1px;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            background: #fff;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .slider::-moz-range-thumb {
+            width: 12px;
+            height: 12px;
+            background: #fff;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+
+        .value {
+            font-size: 9px;
+            color: #999;
+            margin-top: 3px;
+        }
+
+        .button {
+            width: 100%;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            margin-top: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .textarea {
+            width: 100%;
+            height: 60px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            color: white;
+            font-family: inherit;
+            font-size: 9px;
+            resize: vertical;
+        }
+
+        .textarea::placeholder {
+            color: #999;
+        }
+
+        .file-input {
+            width: 100%;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            color: white;
+            font-family: inherit;
+            font-size: 10px;
+        }
+
+        .info {
+            font-size: 9px;
+            color: #999;
+            margin-top: 8px;
+            text-align: center;
+        }
+
+        .instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 10px;
+            color: #ccc;
+            max-width: 300px;
+        }
+
+        #threejs-container {
+            width: 100%;
+            height: 100%;
+        }
+
+        .svg-section {
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            padding-top: 15px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="threejs-container"></div>
+        
+        <div class="controls">
+            <h1>Night Sky</h1>
+            
+            <div class="control-group">
+                <label for="constellationSize">Constellation Size</label>
+                <input type="range" id="constellationSize" class="slider" min="0.5" max="1" value="1.5" step="0.1">
+                <div class="value" id="constellationSizeValue">1.5</div>
+            </div>
+
+
+
+            <div class="control-group">
+                <label for="animationSpeed">Animation Speed</label>
+                <input type="range" id="animationSpeed" class="slider" min="0" max="2" value="0.5" step="0.1">
+                <div class="value" id="animationSpeedValue">0.5</div>
+            </div>
+
+            <div class="control-group">
+                <label for="pathDensity">Star Density</label>
+                <input type="range" id="pathDensity" class="slider" min="10" max="10" value="10" step="20">
+                <div class="value" id="pathDensityValue">50</div>
+            </div>
+
+            <div class="control-group">
+                <label for="outlineOpacity">Outline Opacity</label>
+                <input type="range" id="outlineOpacity" class="slider" min="0.7" max="1" value="0.6=7" step="0.05">
+                <div class="value" id="outlineOpacityValue">0.6</div>
+            </div>
+
+            <div class="control-group">
+                <label for="lineThickness">Line Thickness</label>
+                <input type="range" id="lineThickness" class="slider" min="0.3" max="1" value="0.3" step="0.01">
+                <div class="value" id="lineThicknessValue">0.05</div>
+            </div>
+
+            <div class="control-group">
+                <label for="bloomIntensity">Bloom Intensity</label>
+                <input type="range" id="bloomIntensity" class="slider" min="0" max="3" value="1" step="0.1">
+                <div class="value" id="bloomIntensityValue">1</div>
+            </div>
+
+            <div class="control-group">
+                <label for="bloomRadius">Bloom Radius</label>
+                <input type="range" id="bloomRadius" class="slider" min="0" max="1" value="0.5" step="0.01">
+                <div class="value" id="bloomRadiusValue">0.5</div>
+            </div>
+
+            <div class="control-group">
+                <label for="bloomThreshold">Bloom Threshold</label>
+                <input type="range" id="bloomThreshold" class="slider" min="0" max="1" value="0.3" step="0.01">
+                <div class="value" id="bloomThresholdValue">0.3</div>
+            </div>
+
+            <div class="control-group">
+                <button class="button" onclick="toggleShape()">Switch Constellation</button>
+            </div>
+
+            <div class="svg-section">
+                <div class="control-group">
+                    <label for="svgFile">Upload SVG</label>
+                    <input type="file" id="svgFile" class="file-input" accept=".svg">
+                </div>
+
+                <div class="control-group">
+                    <label for="svgText">Paste SVG Code</label>
+                    <textarea id="svgText" class="textarea" placeholder="Paste SVG code..."></textarea>
+                    <button class="button" onclick="loadSVGFromText()">Load SVG</button>
+                </div>
+
+                <button class="button" onclick="resetToDefault()">Reset Default</button>
+                
+                <div class="info" id="pointInfo">Stars: 0</div>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <strong>Controls:</strong><br>
+            • Mouse/Touch: Look around<br>
+            • Scroll: Zoom in/out<br>
+            • Upload SVG to create custom constellations
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+    <script>
+        let nightSkyInstance = null;
+
+        class NightSkyConstellations {
+            constructor() {
+                this.container = document.getElementById('threejs-container');
+                
+                // Scene setup
+                this.scene = new THREE.Scene();
+                this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                this.renderer = new THREE.WebGLRenderer({ antialias: true });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.setClearColor(0x000000);
+                this.container.appendChild(this.renderer.domElement);
+
+                // Camera controls
+                this.setupCameraControls();
+
+                // Parameters
+                this.constellationSize = 1.5;
+                this.animationSpeed = 0.5;
+                this.pathDensity = 50;
+                this.outlineOpacity = 0.6;
+                this.lineThickness = 0.05;
+                this.bloomIntensity = 1;
+                this.bloomRadius = 0.5;
+                this.bloomThreshold = 0.3;
+
+                // Animation
+                this.animationOffset = 0;
+                this.mouse = { x: 0, y: 0 };
+                this.targetRotation = { x: 0, y: 0 };
+                this.currentRotation = { x: 0, y: 0 };
+
+                // Constellation data
+                this.constellationOutlines = [];
+                this.constellationStars = [];
+                this.svgPaths = [];
+                this.svgBounds = null;
+                this.currentShape = 0;
+                this.isMorphing = false;
+
+                // Groups
+                this.constellationGroup = new THREE.Group();
+                this.backgroundGroup = new THREE.Group();
+                this.scene.add(this.constellationGroup);
+                this.scene.add(this.backgroundGroup);
+
+                // Post-processing setup
+                this.setupPostProcessing();
+
+                // Default SVGs
+                this.defaultSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 58 58">
+                    <path fill="#333" d="M56.3,17.9c-4.3,1.1-9.1,2.4-12.1,3.2-.8.2-1.4-.8-.8-1.4l14.1-14.1c.2-.2.4-.6.4-.9,0-2.6-2.1-4.6-4.6-4.6s-.7.1-.9.4l-14.1,14.1c-.6.6-1.6,0-1.4-.8l3.2-12.1c.2-.8-.4-1.6-1.2-1.6h-5c-.6,0-1.1.4-1.2.9l-2.5,9.3c-.2.6-.2,1.2,0,1.7l1.8,6.7c1,3.5,3.7,6.3,7.3,7.3l6.7,1.8c.6.2,1.2.2,1.7,0l9.3-2.5c.5,0,.9-.6.9-1.2v-5c0-.8-.8-1.4-1.6-1.2Z"/>
+                    <path fill="#333" d="M57,32.7l-9.3-2.5c-.5-.2-1.1-.2-1.7,0l-6.7,1.8c-3.6,1-6.3,3.8-7.3,7.3l-1.8,6.7c-.2.5-.2,1.1,0,1.7l2.5,9.3c0,.5.6.9,1.2.9h5c.8,0,1.4-.8,1.2-1.6l-3.2-12.1c-.2-.8.8-1.4,1.4-.8l14.1,14.1c.2.3.6.4.9.4,2.5,0,4.6-2,4.6-4.6s-.2-.7-.4-.9l-14.1-14.1c-.6-.6,0-1.6.8-1.4,3,.8,7.8,2.1,12.1,3.2.8.2,1.6-.4,1.6-1.2v-5c0-.6-.4-1.1-.9-1.2Z"/>
+                    <path fill="#333" d="M.9,25.3l9.3,2.5c.5.2,1.1.2,1.7,0l6.7-1.8c3.6-1,6.3-3.8,7.3-7.3l1.8-6.7c.2-.5.2-1.1,0-1.7l-2.5-9.3h0c0-.5-.6-.9-1.2-.9h-5c-.8,0-1.4.8-1.2,1.6l3.2,12.1c.2.8-.8,1.4-1.4.8L5.6.5c-.2-.3-.6-.4-.9-.4C2.2,0,0,2.2,0,4.7s.2.7.4.9l14.1,14.1c.6.6,0,1.6-.8,1.4-3-.8-7.8-2.1-12.1-3.2-.8-.2-1.6.4-1.6,1.2v5c0,.6.3,1.1.9,1.2Z"/>
+                    <path fill="#333" d="M26,39.3c-1-3.5-3.7-6.3-7.3-7.3l-6.7-1.8c-.6-.2-1.2-.2-1.7,0l-9.3,2.5c-.6,0-.9.6-.9,1.2v5c0,.8.8,1.4,1.6,1.2,4.3-1.1,9.1-2.4,12.1-3.2.8-.2,1.4.8.8,1.4L.5,52.4c-.2.2-.4.6-.4.9,0,2.6,2.1,4.6,4.6,4.6s.7-.1.9-.4l14.1-14.1c.6-.6,1.6,0,1.4.8l-3.2,12.1c-.2.8.4,1.6,1.2,1.6h5c.6,0,1.1-.4,1.2-.9l2.5-9.3c.2-.6.2-1.2,0-1.7l-1.8-6.7Z"/>
+                </svg>`;
+
+                this.geometricSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 37">
+                    <path fill="#fff" d="M22.2,10v26.5H.5L22.2,10ZM22.2.5c0,6.1-4.9,11-10.9,11S.5,6.6.5.5h21.7ZM25.7,36.4c0-6.1,4.9-11,10.9-11s10.9,4.9,10.9,11h-21.8ZM25.7,27V.5h21.8l-21.8,26.5Z"/>
+                </svg>`;
+
+                this.init();
+            }
+
+            setupPostProcessing() {
+                const renderTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight, {
+                    minFilter: THREE.LinearFilter,
+                    magFilter: THREE.LinearFilter,
+                    format: THREE.RGBAFormat,
+                    encoding: THREE.sRGBEncoding
+                });
+
+                this.composer = new THREE.EffectComposer(this.renderer, renderTarget);
+                
+                // Render pass
+                const renderPass = new THREE.RenderPass(this.scene, this.camera);
+                this.composer.addPass(renderPass);
+
+                // Bloom pass
+                this.bloomPass = new THREE.UnrealBloomPass(
+                    new THREE.Vector2(window.innerWidth, window.innerHeight),
+                    this.bloomIntensity,
+                    this.bloomRadius,
+                    this.bloomThreshold
+                );
+                this.composer.addPass(this.bloomPass);
+
+                // Copy pass to screen
+                const copyPass = new THREE.ShaderPass(THREE.CopyShader);
+                copyPass.renderToScreen = true;
+                this.composer.addPass(copyPass);
+            }
+
+            init() {
+                this.setupControls();
+                this.setupFileInput();
+                this.createBackgroundStarfield();
+                this.loadSVG(this.defaultSVG);
+                this.setupCamera();
+                this.animate();
+                this.handleResize();
+            }
+
+            setupCameraControls() {
+                this.container.addEventListener('mousemove', (event) => {
+                    this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+                    this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+                });
+
+                this.container.addEventListener('wheel', (event) => {
+                    event.preventDefault();
+                    const zoomSpeed = 0.1;
+                    this.camera.fov += event.deltaY * zoomSpeed;
+                    this.camera.fov = Math.max(10, Math.min(120, this.camera.fov));
+                    this.camera.updateProjectionMatrix();
+                });
+
+                // Touch controls for mobile
+                let touchStartX = 0, touchStartY = 0;
+                this.container.addEventListener('touchstart', (event) => {
+                    touchStartX = event.touches[0].clientX;
+                    touchStartY = event.touches[0].clientY;
+                });
+
+                this.container.addEventListener('touchmove', (event) => {
+                    event.preventDefault();
+                    const touchX = event.touches[0].clientX;
+                    const touchY = event.touches[0].clientY;
+                    this.mouse.x = (touchX / window.innerWidth) * 2 - 1;
+                    this.mouse.y = -(touchY / window.innerHeight) * 2 + 1;
+                });
+            }
+
+            setupControls() {
+                const controls = ['constellationSize', 'animationSpeed', 'pathDensity', 'outlineOpacity', 'lineThickness', 'bloomIntensity', 'bloomRadius', 'bloomThreshold'];
+                
+                controls.forEach(controlName => {
+                    const element = document.getElementById(controlName);
+                    const valueElement = document.getElementById(controlName + 'Value');
+                    
+                    if (element && valueElement) {
+                        element.addEventListener('input', (e) => {
+                            const value = parseFloat(e.target.value);
+                            this[controlName] = value;
+                            valueElement.textContent = value;
+                            
+                            if (controlName === 'pathDensity') {
+                                this.extractPointsFromPaths();
+                            } else if (controlName === 'constellationSize') {
+                                this.updateConstellationScale();
+                            } else if (controlName === 'outlineOpacity') {
+                                this.updateOutlineMaterials();
+                            } else if (controlName === 'lineThickness') {
+                                this.extractPointsFromPaths(); // Recreate with new thickness
+                            } else if (controlName === 'bloomIntensity' || controlName === 'bloomRadius' || controlName === 'bloomThreshold') {
+                                this.updateBloomSettings();
+                            }
+                        });
+                        
+                        valueElement.textContent = element.value;
+                    }
+                });
+            }
+
+            setupFileInput() {
+                const fileInput = document.getElementById('svgFile');
+                if (fileInput) {
+                    fileInput.addEventListener('change', (e) => {
+                        const file = e.target.files[0];
+                        if (file && file.type === 'image/svg+xml') {
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                this.loadSVG(e.target.result);
+                            };
+                            reader.readAsText(file);
+                        }
+                    });
+                }
+            }
+
+            createBackgroundStarfield() {
+                // Background stars removed - keeping empty method for compatibility
+            }
+
+            loadSVG(svgString) {
+                try {
+                    const parser = new DOMParser();
+                    const svgDoc = parser.parseFromString(svgString, 'image/svg+xml');
+                    const svgElement = svgDoc.querySelector('svg');
+                    
+                    if (svgElement) {
+                        const viewBox = svgElement.getAttribute('viewBox');
+                        if (viewBox) {
+                            const [x, y, width, height] = viewBox.split(' ').map(Number);
+                            this.svgBounds = { x, y, width, height };
+                        } else {
+                            this.svgBounds = { x: 0, y: 0, width: 100, height: 100 };
+                        }
+                        
+                        this.svgPaths = Array.from(svgElement.querySelectorAll('path')).map(path => ({
+                            d: path.getAttribute('d')
+                        }));
+                        
+                        this.extractPointsFromPaths();
+                    }
+                } catch (error) {
+                    console.error('Error loading SVG:', error);
+                }
+            }
+
+            extractPointsFromPaths() {
+                // Clear existing constellation outlines and stars
+                this.constellationOutlines.forEach(outline => {
+                    this.constellationGroup.remove(outline);
+                });
+                this.constellationOutlines = [];
+
+                this.constellationStars.forEach(star => {
+                    this.constellationGroup.remove(star);
+                });
+                this.constellationStars = [];
+
+                if (!this.svgPaths.length || !this.svgBounds) return;
+
+                const scale = 4; // Scale for 3D space
+
+                // Create constellation outlines
+                this.svgPaths.forEach(pathData => {
+                    if (pathData.d) {
+                        const outline = this.createConstellationOutline(pathData.d, scale);
+                        if (outline) {
+                            this.constellationOutlines.push(outline);
+                            this.constellationGroup.add(outline);
+                        }
+                    }
+                });
+
+                // Create random stars along the paths
+                this.svgPaths.forEach(pathData => {
+                    if (pathData.d) {
+                        const starPoints = this.generateRandomStarPoints(pathData.d, scale);
+                        starPoints.forEach(point => {
+                            const star = this.createConstellationStar(point);
+                            this.constellationStars.push(star);
+                            this.constellationGroup.add(star);
+                        });
+                    }
+                });
+
+                this.updatePointInfo();
+            }
+
+
+
+
+
+            updateConstellationScale() {
+                this.constellationGroup.scale.setScalar(this.constellationSize);
+            }
+
+            generateRandomStarPoints(pathString, scale) {
+                const points = [];
+                
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.setAttribute('width', '1000');
+                svg.setAttribute('height', '1000');
+                svg.setAttribute('viewBox', `${this.svgBounds.x} ${this.svgBounds.y} ${this.svgBounds.width} ${this.svgBounds.height}`);
+                
+                const pathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                pathElement.setAttribute('d', pathString);
+                pathElement.setAttribute('stroke', 'black');
+                pathElement.setAttribute('stroke-width', '1');
+                pathElement.setAttribute('fill', 'none');
+                
+                svg.appendChild(pathElement);
+                document.body.appendChild(svg);
+                
+                try {
+                    const totalLength = pathElement.getTotalLength();
+                    const numStars = Math.max(3, Math.min(15, Math.floor(totalLength / 20))); // Random number of stars based on path length
+                    
+                    for (let i = 0; i < numStars; i++) {
+                        const randomDistance = Math.random() * totalLength;
+                        const point = pathElement.getPointAtLength(randomDistance);
+                        
+                        if (point) {
+                            // Convert 2D SVG coordinates to 3D positions
+                            const x = (point.x - this.svgBounds.x - this.svgBounds.width / 2) * scale / 10;
+                            const y = -(point.y - this.svgBounds.y - this.svgBounds.height / 2) * scale / 10;
+                            const z = (Math.random() - 0.5) * 2; // Small depth variation
+                            
+                            points.push({ 
+                                x, 
+                                y, 
+                                z, 
+                                twinklePhase: Math.random() * Math.PI * 2,
+                                size: 0.5 + Math.random() * 1.5 // Random star size
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.warn('Could not generate star points:', error);
+                } finally {
+                    document.body.removeChild(svg);
+                }
+
+                return points;
+            }
+
+            createConstellationStar(point) {
+                const geometry = new THREE.SphereGeometry(point.size * 0.1, 8, 8);
+                
+                const material = new THREE.ShaderMaterial({
+                    uniforms: {
+                        time: { value: 0 },
+                        twinklePhase: { value: point.twinklePhase }
+                    },
+                    vertexShader: `
+                        varying vec3 vPosition;
+                        varying vec3 vNormal;
+                        
+                        void main() {
+                            vPosition = position;
+                            vNormal = normal;
+                            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                        }
+                    `,
+                    fragmentShader: `
+                        uniform float time;
+                        uniform float twinklePhase;
+                        varying vec3 vPosition;
+                        varying vec3 vNormal;
+                        
+                        void main() {
+                            float twinkle = sin(time * 2.0 + twinklePhase) * 0.3 + 0.7;
+                            float intensity = twinkle;
+                            
+                            // Create bright emission for bloom effect
+                            vec3 color = vec3(1.0, 1.0, 1.0) * intensity * 2.0;
+                            gl_FragColor = vec4(color, 1.0);
+                        }
+                    `,
+                    transparent: false
+                });
+
+                const star = new THREE.Mesh(geometry, material);
+                star.position.set(point.x, point.y, point.z);
+
+                return star;
+            }
+
+            createConstellationOutline(pathString, scale) {
+                const points = [];
+                
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.setAttribute('width', '1000');
+                svg.setAttribute('height', '1000');
+                svg.setAttribute('viewBox', `${this.svgBounds.x} ${this.svgBounds.y} ${this.svgBounds.width} ${this.svgBounds.height}`);
+                
+                const pathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                pathElement.setAttribute('d', pathString);
+                pathElement.setAttribute('stroke', 'black');
+                pathElement.setAttribute('stroke-width', '1');
+                pathElement.setAttribute('fill', 'none');
+                
+                svg.appendChild(pathElement);
+                document.body.appendChild(svg);
+                
+                try {
+                    const totalLength = pathElement.getTotalLength();
+                    const segments = Math.max(1, Math.floor(totalLength / 1)); 
+
+                    for (let i = 0; i < segments; i++) {
+                        const distance = (i / Math.max(1, segments - 1)) * totalLength;
+                        const point = pathElement.getPointAtLength(distance);
+                        
+                        if (point) {
+                            // Convert 2D SVG coordinates to 3D positions
+                            const x = (point.x - this.svgBounds.x - this.svgBounds.width / 2) * scale / 10;
+                            const y = -(point.y - this.svgBounds.y - this.svgBounds.height / 2) * scale / 10;
+                            const z = 0; // Keep outline flat
+                            
+                            points.push(new THREE.Vector3(x, y, z));
+                        }
+                    }
+                } catch (error) {
+                    console.warn('Could not create outline:', error);
+                    return null;
+                } finally {
+                    document.body.removeChild(svg);
+                }
+
+                if (points.length < 2) return null;
+
+                // Create curve from points
+                const curve = new THREE.CatmullRomCurve3(points);
+                
+                // Create tube geometry for thick lines
+                const tubeSegments = Math.max(100, points.length * 2);
+                const radius = this.lineThickness;
+                const radialSegments = 8;
+                const closed = false;
+                
+                const geometry = new THREE.TubeGeometry(curve, tubeSegments, radius, radialSegments, closed);
+
+                // Create glowing tube material
+                const material = new THREE.ShaderMaterial({
+                    uniforms: {
+                        time: { value: 0 },
+                        opacity: { value: this.outlineOpacity },
+                        dashSize: { value: 5.0 },
+                        gapSize: { value: 0.5 }
+                    },
+                    vertexShader: `
+                        uniform float time;
+                        varying vec3 vPosition;
+                        varying vec3 vNormal;
+                        varying vec2 vUv;
+                        
+                        void main() {
+                            vPosition = position;
+                            vNormal = normalize(normalMatrix * normal);
+                            vUv = uv;
+                            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                        }
+                    `,
+                    fragmentShader: `
+                        uniform float time;
+                        uniform float opacity;
+                        uniform float dashSize;
+                        uniform float gapSize;
+                        varying vec3 vPosition;
+                        varying vec3 vNormal;
+                        varying vec2 vUv;
+                        
+                        void main() {
+                            // Create animated dashed effect along the tube
+                            float totalSize = dashSize + gapSize;
+                            float animatedOffset = time * 0.3;
+                            float pattern = mod(vUv.x * 20.0 + animatedOffset, totalSize);
+                            float dashAlpha = smoothstep(gapSize - 0.2, gapSize, pattern) * 
+                                            (1.0 - smoothstep(dashSize, dashSize + 0.2, pattern));
+                            
+                            // Add fresnel glow effect
+                            vec3 viewDirection = normalize(cameraPosition - vPosition);
+                            float fresnel = 1.0 - abs(dot(vNormal, viewDirection));
+                            fresnel = pow(fresnel, 2.0);
+                            
+                            // Combine effects
+                            float finalAlpha = dashAlpha * opacity * (0.4 + fresnel * 0.6);
+                            
+                            // Pure white glow
+                            vec3 glowColor = vec3(1.0, 1.0, 1.0);
+                            gl_FragColor = vec4(glowColor, finalAlpha);
+                        }
+                    `,
+                    transparent: true,
+                    blending: THREE.AdditiveBlending,
+                    side: THREE.DoubleSide
+                });
+
+                const tube = new THREE.Mesh(geometry, material);
+                return tube;
+            }
+
+            updateOutlineMaterials() {
+                this.constellationOutlines.forEach(outline => {
+                    if (outline.material && outline.material.uniforms) {
+                        outline.material.uniforms.opacity.value = this.outlineOpacity;
+                    }
+                });
+            }
+
+
+
+            updatePointInfo() {
+                const pointInfoElement = document.getElementById('pointInfo');
+                if (pointInfoElement) {
+                    pointInfoElement.textContent = `Outlines: ${this.constellationOutlines.length} | Stars: ${this.constellationStars.length}`;
+                }
+            }
+
+            updateBloomSettings() {
+                if (this.bloomPass) {
+                    this.bloomPass.strength = this.bloomIntensity;
+                    this.bloomPass.radius = this.bloomRadius;
+                    this.bloomPass.threshold = this.bloomThreshold;
+                }
+            }
+
+            setupCamera() {
+                this.camera.position.z = 30;
+                this.camera.lookAt(0, 0, 0);
+            }
+
+            handleResize() {
+                window.addEventListener('resize', () => {
+                    this.camera.aspect = window.innerWidth / window.innerHeight;
+                    this.camera.updateProjectionMatrix();
+                    this.renderer.setSize(window.innerWidth, window.innerHeight);
+                    
+                    if (this.composer) {
+                        this.composer.setSize(window.innerWidth, window.innerHeight);
+                    }
+                });
+            }
+
+            animate() {
+                requestAnimationFrame(() => this.animate());
+
+                this.animationOffset += this.animationSpeed * 0.01;
+
+                // Smooth camera movement based on mouse
+                const dampening = 0.02;
+                this.targetRotation.x = this.mouse.y * 0.3;
+                this.targetRotation.y = this.mouse.x * 0.3;
+                
+                this.currentRotation.x += (this.targetRotation.x - this.currentRotation.x) * dampening;
+                this.currentRotation.y += (this.targetRotation.y - this.currentRotation.y) * dampening;
+
+                // Apply rotation to constellation group
+                this.constellationGroup.rotation.x = this.currentRotation.x;
+                this.constellationGroup.rotation.y = this.currentRotation.y;
+
+                // Gentle background rotation
+                this.backgroundGroup.rotation.y += 0.0005;
+
+                // Update shader uniforms
+                this.constellationOutlines.forEach(outline => {
+                    if (outline.material && outline.material.uniforms) {
+                        outline.material.uniforms.time.value = this.animationOffset * 10;
+                    }
+                });
+
+                this.constellationStars.forEach(star => {
+                    if (star.material && star.material.uniforms) {
+                        star.material.uniforms.time.value = this.animationOffset * 10;
+                    }
+                });
+
+                this.composer.render();
+            }
+        }
+
+        function loadSVGFromText() {
+            if (nightSkyInstance) {
+                const svgTextElement = document.getElementById('svgText');
+                if (svgTextElement) {
+                    const svgText = svgTextElement.value.trim();
+                    if (svgText) {
+                        nightSkyInstance.loadSVG(svgText);
+                    }
+                }
+            }
+        }
+
+        function resetToDefault() {
+            if (nightSkyInstance) {
+                nightSkyInstance.currentShape = 0;
+                nightSkyInstance.loadSVG(nightSkyInstance.defaultSVG);
+                const svgTextElement = document.getElementById('svgText');
+                const svgFileElement = document.getElementById('svgFile');
+                if (svgTextElement) svgTextElement.value = '';
+                if (svgFileElement) svgFileElement.value = '';
+            }
+        }
+
+        function toggleShape() {
+            if (nightSkyInstance) {
+                nightSkyInstance.currentShape = nightSkyInstance.currentShape === 0 ? 1 : 0;
+                const newSVG = nightSkyInstance.currentShape === 0 ? 
+                    nightSkyInstance.defaultSVG : nightSkyInstance.geometricSVG;
+                nightSkyInstance.loadSVG(newSVG);
+            }
+        }
+
+        // Initialize the night sky
+        nightSkyInstance = new NightSkyConstellations();
+    </script>
+</body>
+</html>

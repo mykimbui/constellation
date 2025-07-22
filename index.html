@@ -232,7 +232,7 @@
 
             <div class="control-group">
                 <label for="lineThickness">Line Thickness</label>
-                <input type="range" id="lineThickness" class="slider" min="0.02" max="1" value="0.9" step="0.01">
+                <input type="range" id="lineThickness" class="slider" min="0.02" max="1" value="0.05" step="0.01">
                 <div class="value" id="lineThicknessValue">0.05</div>
             </div>
 
@@ -518,7 +518,7 @@
             }
 
             createBackgroundStarfield() {
-                const starCount = 1500;
+                const starCount = 1000; // Reduced star count
                 const geometry = new THREE.BufferGeometry();
                 const positions = new Float32Array(starCount * 3);
                 const sizes = new Float32Array(starCount);
@@ -534,30 +534,30 @@
                     positions[i + 1] = radius * Math.sin(phi) * Math.sin(theta);
                     positions[i + 2] = radius * Math.cos(phi);
 
-                    sizes[i / 3] = 2.0 + Math.random() * 6.0; // Much larger stars
+                    sizes[i / 3] = 1.0 + Math.random() * 3.0; // Smaller stars
 
-                    // Brighter star colors
+                    // Softer star colors
                     const colorChoice = Math.random();
                     if (colorChoice < 0.6) {
-                        // Bright white stars (60%)
-                        colors[i] = 1.0;
-                        colors[i + 1] = 1.0;
-                        colors[i + 2] = 1.0;
+                        // Soft white stars (60%)
+                        colors[i] = 0.6;
+                        colors[i + 1] = 0.6;
+                        colors[i + 2] = 0.6;
                     } else if (colorChoice < 0.8) {
-                        // Bright blue stars (20%)
-                        colors[i] = 0.8;
-                        colors[i + 1] = 0.9;
-                        colors[i + 2] = 1.0;
+                        // Soft blue stars (20%)
+                        colors[i] = 0.4;
+                        colors[i + 1] = 0.5;
+                        colors[i + 2] = 0.6;
                     } else if (colorChoice < 0.95) {
-                        // Bright yellow stars (15%)
-                        colors[i] = 1.0;
-                        colors[i + 1] = 1.0;
-                        colors[i + 2] = 0.9;
+                        // Soft yellow stars (15%)
+                        colors[i] = 0.6;
+                        colors[i + 1] = 0.6;
+                        colors[i + 2] = 0.5;
                     } else {
-                        // Bright red stars (5%)
-                        colors[i] = 1.0;
-                        colors[i + 1] = 0.8;
-                        colors[i + 2] = 0.8;
+                        // Soft red stars (5%)
+                        colors[i] = 0.6;
+                        colors[i + 1] = 0.4;
+                        colors[i + 2] = 0.4;
                     }
                 }
 
@@ -604,9 +604,9 @@
                             float alpha = 1.0 - (dist * 2.0);
                             alpha = alpha * alpha * vAlpha * opacity;
                             
-                            // Make stars brighter
-                            vec3 brightColor = vColor * 1.5;
-                            gl_FragColor = vec4(brightColor, alpha);
+                            // Softer star colors
+                            vec3 softColor = vColor * 0.8;
+                            gl_FragColor = vec4(softColor, alpha);
                         }
                     `,
                     transparent: true,
@@ -759,15 +759,20 @@
                     const totalLength = pathElement.getTotalLength();
                     const numStars = Math.max(3, Math.min(15, Math.floor(totalLength / 20))); // Random number of stars based on path length
                     
+                    // Use evenly distributed points along the path instead of random
                     for (let i = 0; i < numStars; i++) {
-                        const randomDistance = Math.random() * totalLength;
-                        const point = pathElement.getPointAtLength(randomDistance);
+                        // Distribute stars evenly along the path with some randomness
+                        const baseDistance = (i / (numStars - 1)) * totalLength;
+                        const randomOffset = (Math.random() - 0.5) * (totalLength / numStars * 0.3); // Small random offset
+                        const distance = Math.max(0, Math.min(totalLength, baseDistance + randomOffset));
+                        
+                        const point = pathElement.getPointAtLength(distance);
                         
                         if (point) {
                             // Convert 2D SVG coordinates to 3D positions with offset
                             const x = (point.x - bounds.x - bounds.width / 2) * scale / 10 + offsetX;
                             const y = -(point.y - bounds.y - bounds.height / 2) * scale / 10 + offsetY;
-                            const z = (Math.random() - 0.5) * 2; // Small depth variation
+                            const z = 0; // Keep stars on the same plane as outlines for better alignment
                             
                             points.push({ 
                                 x, 

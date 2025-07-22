@@ -219,7 +219,7 @@
 
             <div class="control-group">
                 <label for="animationSpeed">Animation Speed</label>
-                <input type="range" id="animationSpeed" class="slider" min="0" max="1" value="0.05" step="0.05">
+                <input type="range" id="animationSpeed" class="slider" min="0" max="1" value="0.01" step="0.05">
                 <div class="value" id="animationSpeedValue">0.5</div>
             </div>
 
@@ -993,8 +993,8 @@
 
                 // Smooth camera movement based on mouse
                 const dampening = 0.02;
-                this.targetRotation.x = this.mouse.y * 0.10; // Reduced tilt sensitivity
-                this.targetRotation.y = this.mouse.x * 0.10; // Reduced tilt sensitivity
+                this.targetRotation.x = this.mouse.y * 0.05; // Reduced tilt sensitivity
+                this.targetRotation.y = this.mouse.x * 0.05; // Reduced tilt sensitivity
                 
                 this.currentRotation.x += (this.targetRotation.x - this.currentRotation.x) * dampening;
                 this.currentRotation.y += (this.targetRotation.y - this.currentRotation.y) * dampening;
